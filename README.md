@@ -43,7 +43,7 @@ python download.py
 python inference.py --cpu
 ```
 
-## Inspeccionar los pesos
+## Paso 6. Inspeccionar los pesos
 
 ```bash
 python -m pip install -r requirements.txt
@@ -53,6 +53,18 @@ python inspect_weights.py
 El script lee el GGUF local que usa la ruta Vulkan. Muestra cuántos valores se almacenan, el nombre, la forma y el tipo de los primeros 15 tensores, y la media y la desviación estándar del primero. La inspección del archivo se hace en CPU. En este GGUF, verás tipos como `Q8_0` (cuantizado) y `F32` (coma flotante de 32 bits).
 
 Si ya preparaste la ruta de PyTorch, usa `python inspect_weights.py --cpu` para seguir el ejercicio con los pesos originales y los nombres de Transformers.
+
+## Paso 7. Medir el efecto de cambiar un peso
+
+Con la instalación de CPU preparada, ejecuta:
+
+```bash
+OMP_NUM_THREADS=4 python perturb_weight.py
+```
+
+El script guarda el valor original de `q_proj.weight[0, 0]` en la primera capa de atención, suma `0.1` en memoria y repite las mediciones con los mismos cuatro prompts. Usa generación voraz con un máximo de 48 tokens por respuesta. Al terminar, restaura el peso original.
+
+El informe `.cache/weight-perturbation.json` compara los logits y las probabilidades del **siguiente token** para todo el vocabulario. Incluye el cambio máximo de logit, la distancia de variación total (la mitad de la suma de las diferencias absolutas de probabilidad) y los valores de los tokens más probables en cada condición. Las respuestas completas y sus IDs de token se comparan aparte, porque tras la primera divergencia cada generación puede estar condicionada por un prefijo distinto.
 
 ## Probar con otro mensaje
 
