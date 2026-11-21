@@ -1,0 +1,15 @@
+# Entorno, cachés y bytecode de Python
+/.venv/
+/.cache/
+__pycache__/
+*.py[cod]
+
+# Pesos descargados y artefactos de entrenamiento
+/models/
+*.gguf
+*.safetensors
+/checkpoints/
+
+# Configuración local y credenciales
+.env
+.env.*
