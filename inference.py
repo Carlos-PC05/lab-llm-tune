@@ -14,6 +14,7 @@ import subprocess
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent
+GGUF_MODEL_PATH = PROJECT_DIR / "models/qwen3-0.6b-gguf/Qwen3-0.6B-Q8_0.gguf"
 PROMPT = "Explica qué es un ataque de prompt injection."
 MAX_NEW_TOKENS = 150
 
@@ -24,14 +25,14 @@ def generate_on_gpu():
     if not llama_cli.is_file():
         raise SystemExit(f"Falta el ejecutable llama-cli con Vulkan en {llama_cli}")
 
-    model_dir = PROJECT_DIR / "models/qwen3-0.6b-gguf"
-    model_filename = "Qwen3-0.6B-Q8_0.gguf"
-    model_path = model_dir / model_filename
+    model_path = GGUF_MODEL_PATH
     if not model_path.is_file():
         from huggingface_hub import hf_hub_download
 
         model_path = Path(
-            hf_hub_download("Qwen/Qwen3-0.6B-GGUF", model_filename, local_dir=model_dir)
+            hf_hub_download(
+                "Qwen/Qwen3-0.6B-GGUF", model_path.name, local_dir=model_path.parent
+            )
         )
 
     # Seleccionar Vulkan0 de forma explícita hace que un dispositivo ausente

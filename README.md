@@ -43,6 +43,17 @@ python download.py
 python inference.py --cpu
 ```
 
+## Inspeccionar los pesos
+
+```bash
+python -m pip install -r requirements.txt
+python inspect_weights.py
+```
+
+El script lee el GGUF local que usa la ruta Vulkan. Muestra cuántos valores se almacenan, el nombre, la forma y el tipo de los primeros 15 tensores, y la media y la desviación estándar del primero. La inspección del archivo se hace en CPU. En este GGUF, verás tipos como `Q8_0` (cuantizado) y `F32` (coma flotante de 32 bits).
+
+Si ya preparaste la ruta de PyTorch, usa `python inspect_weights.py --cpu` para seguir el ejercicio con los pesos originales y los nombres de Transformers.
+
 ## Probar con otro mensaje
 
 Cambia `PROMPT` en [inference.py](inference.py). En GPU, llama.cpp prepara el mensaje y ejecuta el modelo. Para estudiar esos pasos en Python, lee `generate_on_cpu()`. Allí la plantilla de chat prepara el mensaje, el modelo genera nuevos tokens y el tokenizador los convierte en texto.
