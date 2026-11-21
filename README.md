@@ -66,6 +66,20 @@ El script guarda el valor original de `q_proj.weight[0, 0]` en la primera capa d
 
 El informe `.cache/weight-perturbation.json` compara los logits y las probabilidades del **siguiente token** para todo el vocabulario. Incluye el cambio máximo de logit, la distancia de variación total (la mitad de la suma de las diferencias absolutas de probabilidad) y los valores de los tokens más probables en cada condición. Las respuestas completas y sus IDs de token se comparan aparte, porque tras la primera divergencia cada generación puede estar condicionada por un prefijo distinto.
 
+## Paso 8. Aprender un peso mediante gradientes
+
+Con PyTorch instalado en el entorno virtual, ejecuta:
+
+```bash
+python train_linear.py
+```
+
+El ejercicio usa CPU y cuatro pares de entrenamiento, de `(1, 2)` a `(4, 8)`. Una capa lineal predice `Wx + b` y la pérdida MSE mide la media de los errores al cuadrado.
+
+En cada iteración, `zero_grad()` limpia los gradientes acumulados, `backward()` calcula cuánto cambia la pérdida con respecto a cada parámetro y `step()` aplica la regla de SGD. Por ejemplo, el peso se actualiza como `W = W - 0.01 * gradiente_de_W`. El script muestra el cálculo de la primera actualización y el valor que aplicó PyTorch.
+
+Tras 1000 iteraciones, compara el peso con 2, el sesgo con 0 y la predicción para la entrada 5 con su valor esperado de 10. El paso 7 fijaba manualmente cuánto cambiar un peso de Qwen3. Aquí el gradiente de la pérdida determina la actualización.
+
 ## Probar con otro mensaje
 
 Cambia `PROMPT` en [inference.py](inference.py). En GPU, llama.cpp prepara el mensaje y ejecuta el modelo. Para estudiar esos pasos en Python, lee `generate_on_cpu()`. Allí la plantilla de chat prepara el mensaje, el modelo genera nuevos tokens y el tokenizador los convierte en texto.
