@@ -113,6 +113,19 @@ Cada ejecución guarda el adaptador en `checkpoints/qwen3-0.6b-lora/`. El peso b
 
 Para adaptar una parte mayor del modelo, ejecuta `python train_lora.py --wide`. Este perfil aplica LoRA de rango 8 a las cuatro proyecciones de atención y a las tres proyecciones de la MLP en cada bloque. Los pesos base siguen congelados. El resultado se guarda en `checkpoints/qwen3-0.6b-lora-wide/`. La prueba usa los mismos tres ejemplos y una pasada, igual que el perfil inicial.
 
+## Paso 10. Cargar el modelo ajustado y comparar respuestas
+
+Después de entrenar el adaptador original y el ampliado, ejecuta:
+
+```bash
+python test_lora.py
+python test_lora.py --prompt "¿Para qué sirve una copia de seguridad?"
+```
+
+El script carga Qwen3 una vez y genera tres respuestas a la misma pregunta, primero con el modelo base, luego con el LoRA original y por último con el ampliado. Usa generación sin muestreo con un máximo de 80 tokens nuevos por respuesta. Comparte la selección automática de dispositivo de `train_lora.py` y admite `--cpu`.
+
+La pregunta predeterminada reformula uno de los ejemplos de entrenamiento. Sirve para comprobar el ciclo completo desde los datos hasta la generación con el adaptador guardado. Para evaluar la calidad, prueba también preguntas reservadas y compara la exactitud y claridad de las respuestas.
+
 ## Probar con otro mensaje
 
 Cambia `PROMPT` en [inference.py](inference.py). En GPU, llama.cpp prepara el mensaje y ejecuta el modelo. Para estudiar esos pasos en Python, lee `generate_on_cpu()`. Allí la plantilla de chat prepara el mensaje, el modelo genera nuevos tokens y el tokenizador los convierte en texto.
