@@ -80,6 +80,39 @@ En cada iteración, `zero_grad()` limpia los gradientes acumulados, `backward()`
 
 Tras 1000 iteraciones, compara el peso con 2, el sesgo con 0 y la predicción para la entrada 5 con su valor esperado de 10. El paso 7 fijaba manualmente cuánto cambiar un peso de Qwen3. Aquí el gradiente de la pérdida determina la actualización.
 
+## Paso 9. Entrenar un adaptador LoRA
+
+En el entorno virtual, con PyTorch instalado para tu equipo, ejecuta:
+
+```bash
+python -m pip install -r requirements-lora.txt
+python download.py
+python train_lora.py
+```
+
+El script prefiere una GPU compatible con PyTorch (CUDA, ROCm, XPU o MPS) y usa CPU si PyTorch no detecta ninguna. También puedes elegir CPU con `python train_lora.py --cpu`. Para limitar los hilos en CPU, ejecuta `OMP_NUM_THREADS=4 python train_lora.py --cpu`.
+
+### PyTorch con ROCm en la RX 5600 XT
+
+En Linux x86-64 con Python 3.15, la compilación de AMD TheRock probada en este equipo usa el extra `device-gfx1010`. Instálala dentro de `.venv` con `uv` desde la raíz del proyecto. Es una compilación nightly fijada a la versión probada. [Instrucciones de AMD TheRock](https://github.com/ROCm/TheRock/blob/main/RELEASES.md#installing-multi-arch-pytorch-python-packages)
+
+```bash
+uv pip install --python .venv/bin/python \
+  --index https://nightly.repo.amd.com/rocm/whl-next/ \
+  --index-strategy unsafe-first-match \
+  'torch[device-gfx1010]==2.16.0a0+rocm10.3.0a20261121'
+python -c 'import torch; print(torch.__version__, torch.cuda.get_device_name(0))'
+python train_lora.py
+```
+
+PyTorch usa la interfaz `torch.cuda` también con ROCm. Por eso el script muestra `cuda` cuando entrena en la Radeon. La inferencia con llama.cpp sigue usando Vulkan.
+
+PEFT congela los pesos originales y añade matrices entrenables a `q_proj` y `v_proj` con rango 4 y alfa 8. El entrenamiento lee [los tres ejemplos sintéticos](data/train.jsonl), realiza una pasada y usa un ejemplo por paso. El límite es de 128 tokens por ejemplo. Las etiquetas de la pregunta y la plantilla se ponen a `-100` para que la pérdida se calcule sobre la respuesta y su token de fin de turno.
+
+Cada ejecución guarda el adaptador en `checkpoints/qwen3-0.6b-lora/`. El peso base sigue en `models/`. Los tres ejemplos comprueban que el entrenamiento y el guardado funcionan. Para medir si el adaptador generaliza, amplía los datos y reserva ejemplos independientes para validación. [Documentación de PEFT](https://huggingface.co/docs/transformers/peft)
+
+Para adaptar una parte mayor del modelo, ejecuta `python train_lora.py --wide`. Este perfil aplica LoRA de rango 8 a las cuatro proyecciones de atención y a las tres proyecciones de la MLP en cada bloque. Los pesos base siguen congelados. El resultado se guarda en `checkpoints/qwen3-0.6b-lora-wide/`. La prueba usa los mismos tres ejemplos y una pasada, igual que el perfil inicial.
+
 ## Probar con otro mensaje
 
 Cambia `PROMPT` en [inference.py](inference.py). En GPU, llama.cpp prepara el mensaje y ejecuta el modelo. Para estudiar esos pasos en Python, lee `generate_on_cpu()`. Allí la plantilla de chat prepara el mensaje, el modelo genera nuevos tokens y el tokenizador los convierte en texto.
